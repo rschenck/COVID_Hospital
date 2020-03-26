@@ -29,6 +29,9 @@ class Constants {
     final static double MOVE=0.25;
 
     final static boolean GETGIF=true;
+
+    final static boolean FLOORPLAN=true;
+    final static String floorFile = "src/floorplan.txt";
 }
 
 public class main {
