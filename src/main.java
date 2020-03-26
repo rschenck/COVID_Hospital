@@ -3,9 +3,6 @@ import Framework.Gui.GridWindow;
 import Framework.Rand;
 import Framework.Util;
 
-import static Framework.Util.RGB;
-import static Framework.Util.RGB256;
-
 class Constants {
     // Waiting room size
     final static int xSIZE=80;
@@ -45,7 +42,7 @@ class Constants {
     /*
     Color Scheme
      */
-    final public static int PATIENT = RGB256(35, 88, 148), VISITOR = RGB256(114, 176, 222), INFECTED = RGB256(164, 44, 37), NEWINFECT = RGB256(229, 100, 95);
+    final public static int PATIENT = Util.RGB256(35, 88, 148), VISITOR = Util.RGB256(114, 176, 222), INFECTED = Util.RGB256(164, 44, 37), NEWINFECT = Util.RGB256(229, 100, 95);
 
 }
 
@@ -61,7 +58,6 @@ public class main {
 
             //draw
             g.DrawModel(win);
-            giffy.AddFrame(win);
 
             if(Constants.GETGIF){
                 maker.AddFrame(win);
@@ -70,7 +66,7 @@ public class main {
         if(Constants.GETGIF) {
             maker.Close();
         }
-        giffy.Close();
+
         win.Close();
     }
 

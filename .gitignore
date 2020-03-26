@@ -72,3 +72,6 @@ fabric.properties
 
 # Custom files
 infection.gif
+this.gif
+
+.idea/**

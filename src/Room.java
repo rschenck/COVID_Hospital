@@ -163,16 +163,19 @@ public class Room extends AgentGrid2D<Person> {
             int color=Util.WHITE;
             Person p=GetAgent(i);
             if(p!=null){
-                if(p.infectionStatus==1) {
-                    color = Util.YELLOW;
-                } else if(p.infectionStatus==2) {
-                    color = Util.MAGENTA;
-                } else {
-                  if(p.status==2){
+                if (p.infectionStatus==0){ // Infection Coloring
+                    if(p.infectionStatus==1) {
+                        color = Constants.INFECTED;
+                    } else if(p.infectionStatus==2) {
+                        color = Constants.NEWINFECT;
+                    }
+                } else { // Non-Infected Coloring
+                  if(p.status==2) {
                       color=Constants.VISITOR;
                   }
-                  if(p.status==1){
-                      color=Constants.PATIENT;
+                  if(p.status==1) {
+                      color = Constants.PATIENT;
+                  }
                 }
             }
             win.SetPix(i,color);
