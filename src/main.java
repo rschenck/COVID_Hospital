@@ -3,6 +3,9 @@ import Framework.Gui.GridWindow;
 import Framework.Rand;
 import Framework.Util;
 
+import static Framework.Util.RGB;
+import static Framework.Util.RGB256;
+
 class Constants {
     // Waiting room size
     final static int xSIZE=80;
@@ -29,12 +32,17 @@ class Constants {
     final static double MOVE=0.25;
 
     final static boolean GETGIF=true;
+
+    /*
+    Color Scheme
+     */
+    final public static int PATIENT = RGB256(35, 88, 148), VISITOR = RGB256(114, 176, 222), INFECTED = RGB256(164, 44, 37), NEWINFECT = RGB256(229, 100, 95);
 }
 
 public class main {
 
     public static void main(String[] args) {
-        GridWindow win=new GridWindow(Constants.xSIZE, Constants.ySIZE,10);
+        GridWindow win=new GridWindow("COVID-19",Constants.xSIZE, Constants.ySIZE,10);
         Room g=new Room(Constants.xSIZE, Constants.ySIZE);
         GifMaker maker = new GifMaker("./this.gif",10,true);
         for (int i = 0; i < Constants.TIME; i++) {

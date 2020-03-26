@@ -147,19 +147,18 @@ public class Room extends AgentGrid2D<Person> {
             for (int i = 0; i < p.numVisitors; i++) {
                 NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), -1);
             }
-
     }
 
     public void DrawModel(GridWindow win){
         for (int i = 0; i < length; i++) {
-            int color=Util.BLACK;
+            int color=Util.WHITE;
             Person p=GetAgent(i);
             if(p!=null){
                 if(p.status==2){
-                    color=Util.RED;
+                    color=Constants.VISITOR;
                 }
                 if(p.status==1){
-                    color=Util.WHITE;
+                    color=Constants.PATIENT;
                 }
             }
             win.SetPix(i,color);
