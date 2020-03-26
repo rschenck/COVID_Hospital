@@ -1,10 +1,13 @@
+import Framework.Gui.GifMaker;
 import Framework.Gui.GridWindow;
 import Framework.Rand;
 import Framework.Util;
 
 class Constants {
     // Waiting room size
-    final static int SIZE=40; // assume square this is SIZE*SIZE
+    final static int xSIZE=80;
+    final static int ySIZE=40; // assume square this is SIZE*SIZE
+
     final static int CAPACITY=200;
 
     // Length of Simulation
@@ -21,14 +24,16 @@ class Constants {
 
     // Movement Probability
     final static double MOVE=0.25;
+
+    final static boolean GETGIF=false;
 }
 
 public class main {
 
     public static void main(String[] args) {
-        GridWindow win=new GridWindow(Constants.SIZE, Constants.SIZE,10);
-        Room g=new Room(Constants.SIZE, Constants.SIZE);
-
+        GridWindow win=new GridWindow(Constants.xSIZE, Constants.ySIZE,10);
+        Room g=new Room(Constants.xSIZE, Constants.ySIZE);
+        GifMaker maker = new GifMaker("./this.gif",100,true);
         for (int i = 0; i < Constants.TIME; i++) {
             win.TickPause(100);
             g.TimeStep();
@@ -36,7 +41,12 @@ public class main {
             //draw
             g.DrawModel(win);
 
-
+            if(Constants.GETGIF){
+                maker.AddFrame(win);
+            }
+        }
+        if(Constants.GETGIF) {
+            maker.Close();
         }
     }
 
