@@ -53,22 +53,25 @@ public class Room extends AgentGrid2D<Person> {
         ShuffleAgents(rng);
     }
 
-    public int GetPosition(Person thisPerson, int nOptions) {
+    public int GetPosition(Person thisPerson, int nOptions, int objective) {
         double closest = 10000000;
         int closestIdx = -10;
         double distance;
         for (Person p : this) {
             if (p.patid == thisPerson.patid && p.status == 1) {
                 for (int i = 0; i < nOptions; i++) {
-                    distance = Distance(p.Xsq(), ItoX(mooreHood[i]), p.Ysq(), ItoY(mooreHood[i]));
-                    // 80% chance you go to the empty position closest to your patient
+                    if(thisPerson.direction==-1){
+                        distance = Distance(p.Xsq(), ItoX(mooreHood[i]), p.Ysq(), ItoY(mooreHood[i]));
+                    }  else {
+                        distance = Distance()
+                    }
                     if (closest > distance) {
                         closest = distance;
                         closestIdx = i;
                     }
                 }
 
-                if (rng.Double() < 0.8) {
+                if (rng.Double() < 0.8) { // 80% chance you go to the empty position closest to your patient
                     return (closestIdx);
                 } else {
                     return (rng.Int(nOptions));

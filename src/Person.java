@@ -5,12 +5,14 @@ public class Person extends AgentPT2D<Room> {
     int status; // 1 for patient, 2 for visitor,
     int numVisitors;
     int entered;
+    int direction;
 
-    public Person Init(int stat, int numVisitors, int id, int tick){
+    public Person Init(int stat, int numVisitors, int id, int tick, int direction){
         this.status=stat;
         this.numVisitors=numVisitors;
         this.patid=id;
         this.entered=tick;
+        this.direction=direction;
         return(this);
     }
 

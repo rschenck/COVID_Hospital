@@ -8,6 +8,9 @@ class Constants {
     final static int xSIZE=80;
     final static int ySIZE=40; // assume square this is SIZE*SIZE
 
+    // Locations in Hospital
+    int[] LOCATIONS=new int[]{Constants.xSIZE/2, Constants.ySIZE/2, 0, Constants.ySIZE, Constants.xSIZE, Constants.ySIZE}; // xy waiting area, xy treat area 1, xy treat area 2
+
     final static int CAPACITY=200;
 
     // Length of Simulation
