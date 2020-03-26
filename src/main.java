@@ -17,7 +17,7 @@ class Constants {
     final static int CAPACITY=200;
 
     // Length of Simulation
-    final static int TIME=10000;
+    final static int TIME=500;
 
     // New Patient Rate
     final static double NEWPATRATE=0.1;
@@ -31,12 +31,22 @@ class Constants {
     // Movement Probability
     final static double MOVE=0.25;
 
+    // Probability that a patient or visitor is infected when showing up to the clinic
+    final static double INFECTEDBEFOREVISITPROB=0.1;
+
+    // Radius over which an infected person can infect others
+    final static double INFECTIONRADIUS=1.;
+
+    // Probability of infection if you are within INFECTIONRADIUS of an infected person
+    final static double INFECTIONPROB=0.1;
+
     final static boolean GETGIF=true;
 
     /*
     Color Scheme
      */
     final public static int PATIENT = RGB256(35, 88, 148), VISITOR = RGB256(114, 176, 222), INFECTED = RGB256(164, 44, 37), NEWINFECT = RGB256(229, 100, 95);
+
 }
 
 public class main {
@@ -51,6 +61,7 @@ public class main {
 
             //draw
             g.DrawModel(win);
+            giffy.AddFrame(win);
 
             if(Constants.GETGIF){
                 maker.AddFrame(win);
@@ -59,6 +70,8 @@ public class main {
         if(Constants.GETGIF) {
             maker.Close();
         }
+        giffy.Close();
+        win.Close();
     }
 
 }
