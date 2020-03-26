@@ -5,7 +5,7 @@ public class Person extends AgentPT2D<Room> {
     int status; // 1 for patient, 2 for visitor,
     int numVisitors;
     int entered;
-    int infectionStatus; // 0 for healthy, 1 for infected
+    int infectionStatus; // 0 for healthy, 1 for infected, 2 for newly infected
 
     public Person Init(int stat, int numVisitors, int id, int tick, int infectionStatus){
         this.status=stat;

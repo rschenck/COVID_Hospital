@@ -45,7 +45,7 @@ public class Room extends AgentGrid2D<Person> {
             if(p.infectionStatus==1 && 8-nOptions>0){ // The 8 is specific to a Moore neighbourhood. Needs to be changed for other ngb types
                 for(Person e: this.IterAgentsRad(p.Xsq(), p.Ysq(), Constants.INFECTIONRADIUS)){
                     if(e.infectionStatus==0 && rng.Double()<Constants.INFECTIONPROB){
-                        e.infectionStatus=1;
+                        e.infectionStatus=2;
                     }
                 }
             }
@@ -105,8 +105,10 @@ public class Room extends AgentGrid2D<Person> {
             int color=Util.BLACK;
             Person p=GetAgent(i);
             if(p!=null){
-                if(p.infectionStatus==1){
+                if(p.infectionStatus==1) {
                     color = Util.YELLOW;
+                } else if(p.infectionStatus==2) {
+                    color = Util.MAGENTA;
                 } else {
                     if (p.status == 2) {
                         color = Util.RED;
