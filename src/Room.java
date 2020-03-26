@@ -21,24 +21,32 @@ public class Room extends AgentGrid2D<Person> {
     public void TimeStep(){
         // New Patients and Visitors
         if(Pop()<Constants.CAPACITY && rng.Double()<Constants.NEWPATRATE){
-            Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick());
+            Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
             id++;
             for (int i = 0; i < p.numVisitors; i++) {
-                NewAgentSQ(xDim/2+i+1,0).Init(2,0,p.patid, GetTick());
+                NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
             }
         }
 
         for(Person p: this){
+            nOptions=MapEmptyHood(this.mooreHood, p.Xsq(), p.Ysq());
+            // Movement
             if(p.status==1){
-                nOptions=MapEmptyHood(this.mooreHood, p.Xsq(), p.Ysq());
                 if(nOptions>0){
                     p.MoveSQ(mooreHood[rng.Int(nOptions)]);
                 }
             } else {
-                nOptions=MapEmptyHood(this.mooreHood, p.Xsq(), p.Ysq());
                 int posIdx = GetPosition(p, nOptions);
                 if(nOptions>0){
                     p.MoveSQ(mooreHood[posIdx]);
+                }
+            }
+            // Check if this person is infected, and if so if it passes on its infection
+            if(p.infectionStatus==1 && 8-nOptions>0){ // The 8 is specific to a Moore neighbourhood. Needs to be changed for other ngb types
+                for(Person e: this.IterAgentsRad(p.Xsq(), p.Ysq(), Constants.INFECTIONRADIUS)){
+                    if(e.infectionStatus==0 && rng.Double()<Constants.INFECTIONPROB){
+                        e.infectionStatus=1;
+                    }
                 }
             }
 
@@ -84,10 +92,10 @@ public class Room extends AgentGrid2D<Person> {
 
     public void initialize(){
 //        Person p=new Init(1);
-        Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick());
+        Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
         id++;
             for (int i = 0; i < p.numVisitors; i++) {
-                NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick());
+                NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
             }
 
     }
@@ -97,11 +105,15 @@ public class Room extends AgentGrid2D<Person> {
             int color=Util.BLACK;
             Person p=GetAgent(i);
             if(p!=null){
-                if(p.status==2){
-                    color=Util.RED;
-                }
-                if(p.status==1){
-                    color=Util.WHITE;
+                if(p.infectionStatus==1){
+                    color = Util.YELLOW;
+                } else {
+                    if (p.status == 2) {
+                        color = Util.RED;
+                    }
+                    if (p.status == 1) {
+                        color = Util.WHITE;
+                    }
                 }
             }
             win.SetPix(i,color);
