@@ -1,4 +1,5 @@
 import Framework.GridsAndAgents.AgentPT2D;
+import Framework.Util;
 
 public class Person extends AgentPT2D<Room> {
     int patid; // patient ID or visitor for that patient
