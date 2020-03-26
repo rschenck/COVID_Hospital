@@ -6,6 +6,7 @@ public class Person extends AgentPT2D<Room> {
     int numVisitors;
     int entered;
     int direction;
+    int LeaveTrigger=0;
 
     public Person Init(int stat, int numVisitors, int id, int tick, int direction){
         this.status=stat;
