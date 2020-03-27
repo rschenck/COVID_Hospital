@@ -13,9 +13,16 @@ public class Room extends AgentGrid2D<Person> {
     int posIdx;
     Rand rng=new Rand();
     int[]mooreHood= Util.MooreHood(false);
+    int[]hood;
     int nOptions;
     int[][] floorplan = new int[xDim][yDim];
+    double closest; // For movement
+    int closestIdx; // For movement
+    double distance; // For movement
 
+    /*
+    Init function
+     */
     public Room(int x, int y) {
         super(x, y, Person.class);
         xDim = x;
@@ -28,7 +35,6 @@ public class Room extends AgentGrid2D<Person> {
         Movement of the peoples
          */
         for(Person p: this) {
-            int[]hood;
             if(Constants.FLOORPLAN){hood= GetFloorplan(floorplan,p.Xsq(),p.Ysq());}
             else{hood=this.mooreHood;}
             if (p.status == 1) {
@@ -36,6 +42,7 @@ public class Room extends AgentGrid2D<Person> {
                 if (nOptions > 0) {
                     posIdx = GetPatientPosition(p, nOptions);
                     p.MoveSQ(hood[posIdx]);
+                    System.out.println(p.posCount);
                 }
             } else {
                 nOptions = MapEmptyHood(hood, p.Xsq(), p.Ysq());
@@ -45,11 +52,32 @@ public class Room extends AgentGrid2D<Person> {
                 }
             }
 
+            /*
+            Infection Dynamics during movement
+             */
             if(p.infectionStatus==1 && 8-nOptions>0) { // The 8 is specific to a Moore neighbourhood. Needs to be changed for other ngb types
                 for (Person e : this.IterAgentsRad(p.Xsq(), p.Ysq(), Constants.INFECTIONRADIUS)) {
                     if (e.infectionStatus == 0 && rng.Double() < Constants.INFECTIONPROB) {
                         e.infectionStatus = 2;
                     }
+                }
+            }
+        }
+
+        /*
+        Patients will leave once they've completed Objectives
+         */
+        ArrayList<Integer> DeadIDs = new ArrayList<>();
+        for(Person p: this){
+
+            if(p.direction==-2){
+                DeadIDs.add(p.patid);
+            }
+        }
+        for (int i = 0; i < DeadIDs.size(); i++) {
+            for(Person p: this){
+                if(p.patid==DeadIDs.get(i)){
+                    p.Dispose();
                 }
             }
         }
@@ -65,32 +93,6 @@ public class Room extends AgentGrid2D<Person> {
             }
         }
 
-        /*
-        Patients will leave once they've completed Objectives
-         */
-        ArrayList<Integer> DeadIDs = new ArrayList<>();
-        for(Person p: this){
-            // Check if this person is infected, and if so if it passes on its infection
-            if(p.infectionStatus==1 && 8-nOptions>0){ // The 8 is specific to a Moore neighbourhood. Needs to be changed for other ngb types
-                for(Person e: this.IterAgentsRad(p.Xsq(), p.Ysq(), Constants.INFECTIONRADIUS)){
-                    if(e.infectionStatus==0 && rng.Double()<Constants.INFECTIONPROB){
-                        e.infectionStatus=2;
-                    }
-                }
-            }
-          
-            if(p.direction==-2){
-                DeadIDs.add(p.patid);
-            }
-        }
-        for (int i = 0; i < DeadIDs.size(); i++) {
-            for(Person p: this){
-                if(p.patid==DeadIDs.get(i)){
-                    p.Dispose();
-                }
-            }
-        }
-
         IncTick();
         CleanAgents();
         ShuffleAgents(rng);
@@ -100,34 +102,65 @@ public class Room extends AgentGrid2D<Person> {
     This is used for the objectives. These are the leaders in movement
      */
     public int GetPatientPosition(Person p, int nOptions) {
-        double closest = 10000000;
-        int closestIdx = -10;
-        double distance;
+        closest = 10000000;
+        closestIdx = -10;
         for (int i = 0; i < nOptions; i++) {
-            distance = Distance(Constants.LOCATIONS[2*p.direction], ItoX(mooreHood[i]), Constants.LOCATIONS[2*p.direction+1], ItoY(mooreHood[i]));
+            // Distance function is being passed specific coordinates based on the "objectives" of the patients
+            distance = Distance(Constants.LOCATIONS[2*p.direction], ItoX(hood[i]), Constants.LOCATIONS[2*p.direction+1], ItoY(hood[i]));
             if (closest > distance) {
                 closest = distance;
                 closestIdx = i;
             }
         }
 
-        if(closest<3 & p.direction==0){ // Handles changing in direction
-            p.direction=rng.Int(2)+1; // 0 is center
-        } else if(closest<4 & (p.direction==1 | p.direction==2)) {
-            int diff=GetTick()-p.LeaveTrigger;
-            if (p.LeaveTrigger!=0 & GetTick()-p.LeaveTrigger>5){
-                p.direction=3; // This is the entrance/exit
-            } else {
-                p.LeaveTrigger=GetTick();
+        // Portion of Code Handles changing in direction
+        // 0 = middle; 1 = right waiting room, 2 = left waiting room, 3 = main door
+        if(closest<3 & p.direction==0 & !p.PatientWaited){
+            // Picking a waiting room. 0 is center, thus +1
+            p.direction=rng.Int(2)+1;
+            p.posCount++;
+        }
+
+        // If patient has reached the waiting room they are able to persist there randomly
+        else if(closest<4 & (p.direction==1 | p.direction==2)) {
+            // If LeaveTrigger is not true
+            if (p.LeaveTrigger != 0 & GetTick() - p.LeaveTrigger > Constants.VISITTIME & p.PatientWaited==false) { // 5 is duration. Will depend on parameterization
+                // This is the main sorting point in hallway
+                p.direction = 4;
+                p.PatientWaited = true;
             }
-        } else if(closest<4 & p.direction==3){
-            p.direction=-2; // signal to leave, meaning people are now within the distance to the exit
+            // If they haven't gotten the signal to leave yet wander randomly or some other function
+            else if(p.PatientWaited==false & GetTick() - p.LeaveTrigger < Constants.VISITTIME & p.LeaveTrigger!=0) {
+                return (rng.Int(nOptions));
+            }
+            // If they just reached the appropriate spot. Change the leave trigger.
+            else if(p.LeaveTrigger == 0 & p.PatientWaited==false) {
+                p.LeaveTrigger = GetTick();
+                p.posCount++;
+            }
+        }
+
+        // If patient waited and can now leave
+        else if(closest<3 & p.direction==4 & p.PatientWaited){
+            p.direction=3;
+            p.posCount++;
+        }
+        // If patient waited, made way down hallway and can now leave (i.e. be disposed of)
+        else if(closest<2 & p.direction==3 & p.PatientWaited){
+
+            // signal to leave, meaning people are now within the distance to the exit
+            p.direction=-2;
+
         }
 
         if (rng.Double() < 0.9) { // 80% chance you go to the empty position closest to your patient
+
             return (closestIdx);
+
         } else {
+
             return (rng.Int(nOptions));
+
         }
     }
 
@@ -135,13 +168,12 @@ public class Room extends AgentGrid2D<Person> {
     Used for the visitors. These are the followers as they simply move towards the leader/patient
      */
     public int GetPosition(Person thisPerson, int nOptions) {
-        double closest = 10000000;
-        int closestIdx = -10;
-        double distance;
+        closest = 10000000;
+        closestIdx = -10;
         for (Person p : this) {
             if (p.patid == thisPerson.patid && p.status == 1) {
                 for (int i = 0; i < nOptions; i++) {
-                    distance = Distance(p.Xsq(), ItoX(mooreHood[i]), p.Ysq(), ItoY(mooreHood[i]));
+                    distance = Distance(p.Xsq(), ItoX(hood[i]), p.Ysq(), ItoY(hood[i]));
                     if (closest > distance) {
                         closest = distance;
                         closestIdx = i;
@@ -162,16 +194,23 @@ public class Room extends AgentGrid2D<Person> {
         return(Math.sqrt(Math.pow(x1-x2,2) + Math.pow(y1-y2,2)));
     }
 
+    /*
+    Initialization function when grid is called.
+     */
     public void initialize(){
-//        Person p=new Init(1);
-        Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0); // 0 Direction is to center
+        Person p=NewAgentSQ(xDim/2-4,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0); // 0 Direction is to center
         id++;
         for (int i = 0; i < p.numVisitors; i++) {
             NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), -1, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
         }
+
+        // Draw floorplan if using that option.
         if(Constants.FLOORPLAN){floorplan=initializeArray(Constants.floorFile);}
     }
 
+    /*
+    Loading of Floorplan into the Model
+     */
     static public int[][] initializeArray(String filename){
         int[][]array=new int[Constants.xSIZE][Constants.ySIZE];
         try{
@@ -191,6 +230,9 @@ public class Room extends AgentGrid2D<Person> {
         return array;
     }
 
+    /*
+    Floorplan for movement function.
+     */
     public int[] GetFloorplan(int[][] array, int x, int y){
         int[][] ns = new int[][]{{1, 1},{1, 0},{1, -1},{0, -1},{-1, -1},{-1, 0},{-1, 1},{0, 1}};
         boolean[] ns2 = new boolean[8];
@@ -217,19 +259,26 @@ public class Room extends AgentGrid2D<Person> {
         return finalVals;
     }
 
+
+    /*
+    Drawing Function
+     */
     public void DrawModel(GridWindow win){
+        // Drawing of the floorplan
         if(Constants.FLOORPLAN){
             for(int i=0;i<Constants.xSIZE;i++){
                 for(int j=0;j<Constants.ySIZE;j++){
                     if(floorplan[i][j]==0){
-                        win.SetPix(i,j,Util.BLACK);
+                        win.SetPix(i,j,Util.WHITE);
                     }
                     else{
-                        win.SetPix(i,j,Util.WHITE);
+                        win.SetPix(i,j,Util.BLACK);
                     }
                 }
             }
         }
+
+        // Drawing of the people
         for (int i = 0; i < length; i++) {
             int color=Util.WHITE;
             Person p=GetAgent(i);
