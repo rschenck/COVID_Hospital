@@ -69,3 +69,13 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
+
+# Custom files
+infection.gif
+this.gif
+
+.idea/**
+
+.DS_Store
+COVID19_Hospital.iml
+*.iml

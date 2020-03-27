@@ -44,16 +44,24 @@ public class Room extends AgentGrid2D<Person> {
                     p.MoveSQ(hood[posIdx]);
                 }
             }
+
+            if(p.infectionStatus==1 && 8-nOptions>0) { // The 8 is specific to a Moore neighbourhood. Needs to be changed for other ngb types
+                for (Person e : this.IterAgentsRad(p.Xsq(), p.Ysq(), Constants.INFECTIONRADIUS)) {
+                    if (e.infectionStatus == 0 && rng.Double() < Constants.INFECTIONPROB) {
+                        e.infectionStatus = 2;
+                    }
+                }
+            }
         }
 
         /*
         Bring in new patients and their visitors
          */
         if(Pop()<Constants.CAPACITY && rng.Double()<Constants.NEWPATRATE){
-            Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0);
+            Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
             id++;
             for (int i = 0; i < p.numVisitors; i++) {
-                NewAgentSQ(xDim/2+i+1,0).Init(2,0,p.patid, GetTick(), -1);
+                NewAgentSQ(xDim/2+i+1,0).Init(2,0,p.patid, GetTick(), -1, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
             }
         }
 
@@ -62,6 +70,15 @@ public class Room extends AgentGrid2D<Person> {
          */
         ArrayList<Integer> DeadIDs = new ArrayList<>();
         for(Person p: this){
+            // Check if this person is infected, and if so if it passes on its infection
+            if(p.infectionStatus==1 && 8-nOptions>0){ // The 8 is specific to a Moore neighbourhood. Needs to be changed for other ngb types
+                for(Person e: this.IterAgentsRad(p.Xsq(), p.Ysq(), Constants.INFECTIONRADIUS)){
+                    if(e.infectionStatus==0 && rng.Double()<Constants.INFECTIONPROB){
+                        e.infectionStatus=2;
+                    }
+                }
+            }
+          
             if(p.direction==-2){
                 DeadIDs.add(p.patid);
             }
@@ -147,10 +164,10 @@ public class Room extends AgentGrid2D<Person> {
 
     public void initialize(){
 //        Person p=new Init(1);
-        Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0); // 0 Direction is to center
+        Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0); // 0 Direction is to center
         id++;
         for (int i = 0; i < p.numVisitors; i++) {
-            NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), -1);
+            NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), -1, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
         }
         if(Constants.FLOORPLAN){floorplan=initializeArray(Constants.floorFile);}
     }
@@ -214,14 +231,22 @@ public class Room extends AgentGrid2D<Person> {
             }
         }
         for (int i = 0; i < length; i++) {
-            int color=Util.BLACK;
+            int color=Util.WHITE;
             Person p=GetAgent(i);
             if(p!=null){
-                if(p.status==2){
-                    color=Util.RED;
-                }
-                if(p.status==1){
-                    color=Util.WHITE;
+                if (p.infectionStatus!=0){ // Infection Coloring
+                    if(p.infectionStatus==1) {
+                        color = Constants.INFECTED;
+                    } else if(p.infectionStatus==2) {
+                        color = Constants.NEWINFECT;
+                    }
+                } else { // Non-Infected Coloring
+                  if(p.status==2) {
+                      color=Constants.VISITOR;
+                  }
+                  if(p.status==1) {
+                      color = Constants.PATIENT;
+                  }
                 }
                 if(Constants.FLOORPLAN){win.SetPix(i,color);}
             }
