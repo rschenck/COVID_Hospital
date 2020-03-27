@@ -23,7 +23,7 @@ class Constants {
     final static double TRANSMISSION=0.3;
 
     // Visitors Possible (Max Number of Visitors). Equal probability.
-    final static int VISITORS=3;
+    final static int VISITORS=1;
 
     // Movement Probability
     final static double MOVE=0.25;

@@ -185,16 +185,23 @@ public class Room extends AgentGrid2D<Person> {
         return(Math.sqrt(Math.pow(x1-x2,2) + Math.pow(y1-y2,2)));
     }
 
+    /*
+    Initialization function when grid is called.
+     */
     public void initialize(){
-//        Person p=new Init(1);
         Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0); // 0 Direction is to center
         id++;
         for (int i = 0; i < p.numVisitors; i++) {
             NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), -1, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
         }
+
+        // Draw floorplan if using that option.
         if(Constants.FLOORPLAN){floorplan=initializeArray(Constants.floorFile);}
     }
 
+    /*
+    Loading of Floorplan into the Model
+     */
     static public int[][] initializeArray(String filename){
         int[][]array=new int[Constants.xSIZE][Constants.ySIZE];
         try{
@@ -240,7 +247,12 @@ public class Room extends AgentGrid2D<Person> {
         return finalVals;
     }
 
+
+    /*
+    Drawing Function
+     */
     public void DrawModel(GridWindow win){
+        // Drawing of the floorplan
         if(Constants.FLOORPLAN){
             for(int i=0;i<Constants.xSIZE;i++){
                 for(int j=0;j<Constants.ySIZE;j++){
@@ -253,6 +265,8 @@ public class Room extends AgentGrid2D<Person> {
                 }
             }
         }
+
+        // Drawing of the people
         for (int i = 0; i < length; i++) {
             int color=Util.WHITE;
             Person p=GetAgent(i);
