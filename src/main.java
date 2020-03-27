@@ -40,7 +40,7 @@ class Constants {
     final static boolean GETGIF=true;
 
     final static boolean FLOORPLAN=true;
-    final static String floorFile = "src/floorplan.txt";
+    final static String floorFile = "src/floorplan_waiting_rooms.txt";
 
     /*
     Color Scheme
