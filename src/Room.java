@@ -2,6 +2,7 @@ import Framework.GridsAndAgents.AgentGrid2D;
 import Framework.Gui.GridWindow;
 import Framework.Rand;
 import Framework.Util;
+import Framework.Tools.FileIO;
 
 import java.util.ArrayList;
 
@@ -13,6 +14,7 @@ public class Room extends AgentGrid2D<Person> {
     Rand rng=new Rand();
     int[]mooreHood= Util.MooreHood(false);
     int nOptions;
+    int[][] floorplan = new int[xDim][yDim];
 
     public Room(int x, int y) {
         super(x, y, Person.class);
@@ -26,17 +28,20 @@ public class Room extends AgentGrid2D<Person> {
         Movement of the peoples
          */
         for(Person p: this) {
+            int[]hood;
+            if(Constants.FLOORPLAN){hood= GetFloorplan(floorplan,p.Xsq(),p.Ysq());}
+            else{hood=this.mooreHood;}
             if (p.status == 1) {
-                nOptions = MapEmptyHood(this.mooreHood, p.Xsq(), p.Ysq());
+                nOptions = MapEmptyHood(hood, p.Xsq(), p.Ysq());
                 if (nOptions > 0) {
                     posIdx = GetPatientPosition(p, nOptions);
-                    p.MoveSQ(mooreHood[posIdx]);
+                    p.MoveSQ(hood[posIdx]);
                 }
             } else {
-                nOptions = MapEmptyHood(this.mooreHood, p.Xsq(), p.Ysq());
+                nOptions = MapEmptyHood(hood, p.Xsq(), p.Ysq());
                 if (nOptions > 0) {
                     posIdx = GetPosition(p, nOptions);
-                    p.MoveSQ(mooreHood[posIdx]);
+                    p.MoveSQ(hood[posIdx]);
                 }
             }
 
@@ -161,12 +166,70 @@ public class Room extends AgentGrid2D<Person> {
 //        Person p=new Init(1);
         Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0); // 0 Direction is to center
         id++;
-            for (int i = 0; i < p.numVisitors; i++) {
-                NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), -1, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
+        for (int i = 0; i < p.numVisitors; i++) {
+            NewAgentSQ(xDim/2+i+1,0).Init(2,0, p.patid, GetTick(), -1, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
+        }
+        if(Constants.FLOORPLAN){floorplan=initializeArray(Constants.floorFile);}
+    }
+
+    static public int[][] initializeArray(String filename){
+        int[][]array=new int[Constants.xSIZE][Constants.ySIZE];
+        try{
+            FileIO matrixIn =  new FileIO (filename,"r");
+            ArrayList<int[]> readerD = matrixIn.ReadInts(" ");
+
+            for (int i=0;i<Constants.xSIZE;i++){
+                for (int j=0;j<Constants.ySIZE;j++) {
+                    int temp=readerD.get(i)[j];
+                    array[i][j]=temp;
+                }
             }
+        }
+        catch(Exception e){
+            System.out.println("Failure loading initial conditions");
+        }
+        return array;
+    }
+
+    public int[] GetFloorplan(int[][] array, int x, int y){
+        int[][] ns = new int[][]{{1, 1},{1, 0},{1, -1},{0, -1},{-1, -1},{-1, 0},{-1, 1},{0, 1}};
+        boolean[] ns2 = new boolean[8];
+        int total=0;
+        for (int i=0;i<8;i++){
+            if(x+ns[i][0]>=0 && x+ns[i][0]<Constants.xSIZE && y+ns[i][1]>=0 && y+ns[i][1]<Constants.ySIZE) {
+                if (array[x + ns[i][0]][y + ns[i][1]] == 0) {
+                    total++;
+                    ns2[i] = true;
+                }
+            }
+        }
+        int[] finalVals = new int[total*3];
+        for (int i=0;i<total;i++){
+            finalVals[i]=0;
+        }
+        for(int i=0;i<8;i++){
+            if(ns2[i]){
+                finalVals[total]=ns[i][0];
+                finalVals[total+1]=ns[i][1];
+                total+=2;
+            }
+        }
+        return finalVals;
     }
 
     public void DrawModel(GridWindow win){
+        if(Constants.FLOORPLAN){
+            for(int i=0;i<Constants.xSIZE;i++){
+                for(int j=0;j<Constants.ySIZE;j++){
+                    if(floorplan[i][j]==0){
+                        win.SetPix(i,j,Util.BLACK);
+                    }
+                    else{
+                        win.SetPix(i,j,Util.WHITE);
+                    }
+                }
+            }
+        }
         for (int i = 0; i < length; i++) {
             int color=Util.WHITE;
             Person p=GetAgent(i);
@@ -185,8 +248,9 @@ public class Room extends AgentGrid2D<Person> {
                       color = Constants.PATIENT;
                   }
                 }
+                if(Constants.FLOORPLAN){win.SetPix(i,color);}
             }
-            win.SetPix(i,color);
+            if(!Constants.FLOORPLAN){win.SetPix(i,color);}
         }
     }
 }

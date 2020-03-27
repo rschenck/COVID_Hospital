@@ -39,11 +39,13 @@ class Constants {
 
     final static boolean GETGIF=true;
 
+    final static boolean FLOORPLAN=true;
+    final static String floorFile = "src/floorplan.txt";
+
     /*
     Color Scheme
      */
     final public static int PATIENT = Util.RGB256(35, 88, 148), VISITOR = Util.RGB256(114, 176, 222), INFECTED = Util.RGB256(164, 44, 37), NEWINFECT = Util.RGB256(229, 100, 95);
-
 }
 
 public class main {
