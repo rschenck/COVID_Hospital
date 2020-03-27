@@ -75,3 +75,5 @@ infection.gif
 this.gif
 
 .idea/**
+
+.DS_Store
