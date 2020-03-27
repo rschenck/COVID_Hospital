@@ -39,6 +39,14 @@ public class Room extends AgentGrid2D<Person> {
                     p.MoveSQ(mooreHood[posIdx]);
                 }
             }
+
+            if(p.infectionStatus==1 && 8-nOptions>0) { // The 8 is specific to a Moore neighbourhood. Needs to be changed for other ngb types
+                for (Person e : this.IterAgentsRad(p.Xsq(), p.Ysq(), Constants.INFECTIONRADIUS)) {
+                    if (e.infectionStatus == 0 && rng.Double() < Constants.INFECTIONPROB) {
+                        e.infectionStatus = 2;
+                    }
+                }
+            }
         }
 
         /*
@@ -163,7 +171,7 @@ public class Room extends AgentGrid2D<Person> {
             int color=Util.WHITE;
             Person p=GetAgent(i);
             if(p!=null){
-                if (p.infectionStatus==0){ // Infection Coloring
+                if (p.infectionStatus!=0){ // Infection Coloring
                     if(p.infectionStatus==1) {
                         color = Constants.INFECTED;
                     } else if(p.infectionStatus==2) {
