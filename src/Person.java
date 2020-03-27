@@ -8,7 +8,9 @@ public class Person extends AgentPT2D<Room> {
     int entered;
     int infectionStatus; // 0 for healthy, 1 for infected, 2 for newly infected
     int direction;
-    int LeaveTrigger=0;
+    int LeaveTrigger;
+    boolean PatientWaited;
+    int posCount;
 
     public Person Init(int stat, int numVisitors, int id, int tick, int direction, int infectionStatus){
         this.status=stat;
@@ -17,6 +19,9 @@ public class Person extends AgentPT2D<Room> {
         this.entered=tick;
         this.infectionStatus=infectionStatus;
         this.direction=direction;
+        this.posCount=0;
+        this.LeaveTrigger=0;
+        this.PatientWaited=false;
         return(this);
     }
 
