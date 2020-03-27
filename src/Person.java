@@ -1,4 +1,5 @@
 import Framework.GridsAndAgents.AgentPT2D;
+import Framework.Rand;
 import Framework.Util;
 
 public class Person extends AgentPT2D<Room> {
@@ -11,6 +12,9 @@ public class Person extends AgentPT2D<Room> {
     int LeaveTrigger;
     boolean PatientWaited;
     int posCount;
+    int[] holdPos;
+    int beenThere;
+    Rand rng=new Rand();
 
     public Person Init(int stat, int numVisitors, int id, int tick, int direction, int infectionStatus){
         this.status=stat;
@@ -22,6 +26,8 @@ public class Person extends AgentPT2D<Room> {
         this.posCount=0;
         this.LeaveTrigger=0;
         this.PatientWaited=false;
+        this.beenThere=0;
+        this.holdPos=new int[]{rng.Double()<0.5 ? 0: Constants.xSIZE,rng.Double()<0.5 ? 0: Constants.ySIZE};
         return(this);
     }
 

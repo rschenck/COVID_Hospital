@@ -7,6 +7,7 @@ import Framework.Tools.FileIO;
 import java.util.ArrayList;
 
 public class Room extends AgentGrid2D<Person> {
+    Data record=new Data();
     int xDim;
     int yDim;
     int id=0;
@@ -40,9 +41,8 @@ public class Room extends AgentGrid2D<Person> {
             if (p.status == 1) {
                 nOptions = MapEmptyHood(hood, p.Xsq(), p.Ysq());
                 if (nOptions > 0) {
-                    posIdx = GetPatientPosition(p, nOptions);
+                    posIdx = GetPatientPosition(p);
                     p.MoveSQ(hood[posIdx]);
-                    System.out.println(p.posCount);
                 }
             } else {
                 nOptions = MapEmptyHood(hood, p.Xsq(), p.Ysq());
@@ -85,9 +85,10 @@ public class Room extends AgentGrid2D<Person> {
         /*
         Bring in new patients and their visitors
          */
-        if(Pop()<Constants.CAPACITY && rng.Double()<Constants.NEWPATRATE){
+        if(Pop()<Constants.CAPACITY && GetTick()/(1800)<8 && rng.Double()<Constants.NEWPATRATE){
             Person p=NewAgentSQ(xDim/2,0).Init(1, rng.Int(Constants.VISITORS), id, GetTick(), 0, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
             id++;
+            record.numPatientsEnter++;
             for (int i = 0; i < p.numVisitors; i++) {
                 NewAgentSQ(xDim/2+i+1,0).Init(2,0,p.patid, GetTick(), -1, rng.Double()<Constants.INFECTEDBEFOREVISITPROB ? 1: 0);
             }
@@ -101,7 +102,7 @@ public class Room extends AgentGrid2D<Person> {
     /*
     This is used for the objectives. These are the leaders in movement
      */
-    public int GetPatientPosition(Person p, int nOptions) {
+    public int GetPatientPosition(Person p) {
         closest = 10000000;
         closestIdx = -10;
         for (int i = 0; i < nOptions; i++) {
@@ -131,7 +132,9 @@ public class Room extends AgentGrid2D<Person> {
             }
             // If they haven't gotten the signal to leave yet wander randomly or some other function
             else if(p.PatientWaited==false & GetTick() - p.LeaveTrigger < Constants.VISITTIME & p.LeaveTrigger!=0) {
-                return (rng.Int(nOptions));
+                closestIdx = MoveToAnEdge(p);
+////                return(closestIdx);
+//                return (rng.Int(nOptions));
             }
             // If they just reached the appropriate spot. Change the leave trigger.
             else if(p.LeaveTrigger == 0 & p.PatientWaited==false) {
@@ -153,7 +156,7 @@ public class Room extends AgentGrid2D<Person> {
 
         }
 
-        if (rng.Double() < 0.9) { // 80% chance you go to the empty position closest to your patient
+        if (rng.Double() < 1) { // 80% chance you go to the empty position closest to your patient
 
             return (closestIdx);
 
@@ -162,6 +165,20 @@ public class Room extends AgentGrid2D<Person> {
             return (rng.Int(nOptions));
 
         }
+    }
+
+    public int MoveToAnEdge(Person p){
+        closest = 10000000;
+        closestIdx = -10;
+        for (int i = 0; i < nOptions; i++) {
+            // Distance function is being passed specific coordinates based on the "objectives" of the patients
+            distance = Distance(p.holdPos[0], ItoX(hood[i]), p.holdPos[1], ItoY(hood[i]));
+            if (closest > distance) {
+                closest = distance;
+                closestIdx = i;
+            }
+        }
+        return(closestIdx);
     }
 
     /*
